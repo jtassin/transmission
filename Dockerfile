@@ -1,25 +1,25 @@
-FROM debian:latest
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y software-properties-common 
 
-RUN apt-get update
-RUN apt-get install -y transmission-daemon 
-RUN mkdir /transmission
-RUN chmod 1777 /transmission
+RUN add-apt-repository -y ppa:transmissionbt/ppa && \
+    apt-get update && \
+    apt-get install -y transmission-daemon
 
-ENV TRANSMISSION_HOME /transmission/config
+ADD files/transmission-daemon /etc/transmission-daemon
+ADD files/run_transmission.sh /run_transmission.sh
 
-# Transmission ports
-#   HTTP interface
+RUN mkdir -p /var/lib/transmission-daemon/incomplete && \
+    mkdir -p /var/lib/transmission-daemon/downloads && \
+    chown -R debian-transmission: /var/lib/transmission-daemon && \
+    chown -R debian-transmission: /etc/transmission-daemon    
+
+VOLUME ["/var/lib/transmission-daemon/downloads"]
+VOLUME ["/var/lib/transmission-daemon/incomplete"]
+
 EXPOSE 9091
+EXPOSE 12345
 
-RUN mkdir /transmission/download
-RUN mkdir /transmission/watch
-RUN mkdir /transmission/incomplete
-RUN mkdir /transmission/config
+USER debian-transmission
 
-ADD settings.json /transmission/config/settings.json
-
-VOLUME /transmission/download
-VOLUME /transmission/incomplete
-
-CMD [ "--allowed", "127.*,10.*,192.168.*,172.16.*,172.17.*,172.18.*,172.19.*,172.20.*,172.21.*,172.22.*,172.23.*,172.24.*,172.25.*,172.26.*,172.27.*,172.28.*,172.29.*,172.30.*,172.31.*,169.254.*", "--watch-dir", "/transmission/watch", "--encryption-preferred", "--foreground", "--config-dir", "/transmission/config", "--incomplete-dir", "/transmission/incomplete", "--dht", "--no-auth", "--download-dir", "/transmission/download" ]
-ENTRYPOINT ["/usr/bin/transmission-daemon"]
+CMD ["/run_transmission.sh"]
