@@ -16,6 +16,8 @@ RUN mkdir /transmission/watch
 RUN mkdir /transmission/incomplete
 RUN mkdir /transmission/config
 
+ADD settings.json /transmission/config/settings.json
+
 VOLUME /transmission/download
 VOLUME /transmission/incomplete
 
